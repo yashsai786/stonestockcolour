@@ -1,9 +1,10 @@
 import cv2
 import numpy as np
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 from src.domain.services.dominant_color_analyzer import DominantColorAnalyzer, ColorExtractionStrategy
 from src.domain.value_objects.color import DominantColorResult, LABColor
 from src.domain.exceptions.domain_exceptions import ColorExtractionException
+
 
 class AverageColorStrategy(ColorExtractionStrategy):
     """
