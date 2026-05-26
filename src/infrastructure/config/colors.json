@@ -66,69 +66,69 @@
       "tolerance": 10.0
     },
     {
+      "name": "Red",
+      "lab": [38.0, 18.0, 10.0],
+      "tolerance": 25.0
+    },
+    {
+      "name": "Burgundy",
+      "lab": [28.0, 16.0, 4.0],
+      "tolerance": 18.0
+    },
+    {
+      "name": "Pink",
+      "lab": [70.0, 15.0, 6.0],
+      "tolerance": 15.0
+    },
+    {
+      "name": "Rust",
+      "lab": [42.0, 18.0, 24.0],
+      "tolerance": 20.0
+    },
+    {
+      "name": "Terracotta",
+      "lab": [48.0, 15.0, 18.0],
+      "tolerance": 20.0
+    },
+    {
+      "name": "Gold",
+      "lab": [68.0, 8.0, 38.0],
+      "tolerance": 20.0
+    },
+    {
       "name": "Brown",
-      "lab": [40.0, 10.0, 20.0],
+      "lab": [38.0, 8.0, 15.0],
       "tolerance": 18.0
     },
     {
       "name": "Coffee Brown",
-      "lab": [30.0, 8.0, 15.0],
+      "lab": [30.0, 6.0, 12.0],
       "tolerance": 15.0
     },
     {
       "name": "Chocolate",
-      "lab": [25.0, 10.0, 15.0],
+      "lab": [22.0, 5.0, 10.0],
       "tolerance": 15.0
     },
     {
       "name": "Green",
-      "lab": [50.0, -30.0, 25.0],
+      "lab": [38.0, -15.0, 10.0],
       "tolerance": 25.0
     },
     {
       "name": "Emerald Green",
-      "lab": [45.0, -40.0, 30.0],
+      "lab": [48.0, -22.0, 12.0],
       "tolerance": 25.0
     },
     {
       "name": "Olive",
-      "lab": [40.0, -5.0, 20.0],
+      "lab": [44.0, -5.0, 18.0],
       "tolerance": 20.0
     },
     {
       "name": "Blue Grey",
-      "lab": [55.0, -5.0, -10.0],
+      "lab": [48.0, -2.0, -8.0],
       "tolerance": 15.0
-    },
-    {
-      "name": "Gold",
-      "lab": [70.0, 10.0, 50.0],
-      "tolerance": 20.0
-    },
-    {
-      "name": "Rust",
-      "lab": [45.0, 20.0, 25.0],
-      "tolerance": 20.0
-    },
-    {
-      "name": "Pink",
-      "lab": [75.0, 15.0, 5.0],
-      "tolerance": 15.0
-    },
-    {
-      "name": "Burgundy",
-      "lab": [30.0, 25.0, 5.0],
-      "tolerance": 18.0
-    },
-    {
-      "name": "Red",
-      "lab": [45.0, 50.0, 35.0],
-      "tolerance": 25.0
-    },
-    {
-      "name": "Terracotta",
-      "lab": [50.0, 25.0, 30.0],
-      "tolerance": 20.0
     },
     {
       "name": "Multi Color",
