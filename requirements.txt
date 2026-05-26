@@ -6,3 +6,5 @@ pydantic==1.10.8
 python-multipart==0.0.6
 psutil==5.9.5
 pytest==7.3.1
+httpx
+Pillow
