@@ -96,6 +96,20 @@ class CVColorMatcherService(ColorMatcherService):
                 # High-reliability fallback
                 distances = self._calculate_euclidean(query_lab, cand_labs)
 
+        # THE COLOR TEMPERATURE GUARDRAIL:
+        # If there is even a subtle tint of olive, sage, rose, or gold (chrominance C > 4.0),
+        # do NOT default to neutral greys. Penalize neutral profiles so the tinted color wins.
+        c_query = np.sqrt(lab_color.a**2 + lab_color.b**2)
+        if c_query > 4.0:
+            neutral_names = {
+                "pure white", "warm white", "off white", 
+                "light grey", "grey", "dark grey", "charcoal", "black"
+            }
+            for i, p in enumerate(profiles):
+                if p.name.lower() in neutral_names:
+                    # Apply a robust distance penalty scaled to the chrominance saturation
+                    distances[i] += 8.0 + (c_query * 1.5)
+
         # Get index of minimum distance
         min_idx = int(np.argmin(distances))
         return profiles[min_idx]
