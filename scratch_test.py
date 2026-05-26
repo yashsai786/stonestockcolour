@@ -3,9 +3,6 @@ import numpy as np
 import httpx
 import asyncio
 from src.infrastructure.cv.opencv_slab_detection_service import OpenCVSlabDetectionService
-from src.application.services.image_validation_service import ImageValidationService
-from src.infrastructure.http.http_image_fetcher import HttpImageFetcher
-from src.application.services.image_download_service import ImageDownloadService
 from src.infrastructure.cv.hsv_skin_removal_service import HSVSkinRemovalService
 from src.infrastructure.cv.cv_dominant_color_analyzer import CVDominantColorAnalyzer
 from src.infrastructure.cv.cv_color_matcher_service import CVColorMatcherService
@@ -20,17 +17,15 @@ def touches_border(contour, w, h, border_dist=3):
     return False
 
 async def main():
-    url = "https://iblocky.work/cdn-cgi/image/width=800,quality=85,fit=scale-down/bassi-bellotti-spa/bassi-bellotti/9080/Covers/covers_0_1779431103479.webp"
-    print(f"Downloading {url}...")
+    # Load the local green marble slab image directly
+    img_path = "/home/biz26/.gemini/antigravity/brain/d65caf73-5502-47ac-9eb0-f094cea4a595/media__1779778195409.jpg"
+    print(f"Loading {img_path}...")
     
-    val = ImageValidationService()
-    fetcher = HttpImageFetcher(val)
-    downloader = ImageDownloadService(fetcher, val)
-    image_bytes = await downloader.download_image(url)
-    
-    # Decode
-    nparr = np.frombuffer(image_bytes, np.uint8)
-    img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+    img = cv2.imread(img_path)
+    if img is None:
+        print("Failed to load image!")
+        return
+        
     h, w = img.shape[:2]
     
     # Resize
@@ -44,7 +39,7 @@ async def main():
     detector = OpenCVSlabDetectionService()
     contour, slab_mask = detector.detect_slab(resized)
     
-    # 2. Advanced Skin removal with boundary + area filtering
+    # 2. Skin removal with boundary + area filtering
     skin_remover = HSVSkinRemovalService()
     raw_skin_mask = skin_remover.remove_skin(resized)
     
@@ -53,23 +48,18 @@ async def main():
     
     masked_count = 0
     preserved_count = 0
-    
     for c in conts:
         area = cv2.contourArea(c)
-        # Check if the skin-colored contour touches the image border
         touches = touches_border(c, rw, rh)
-        
-        # A human hand touching the slab enters from the boundary and is small (<10%)
         if touches and (area < 0.10 * total_area):
             cv2.drawContours(filtered_skin_mask, [c], -1, 255, thickness=cv2.FILLED)
             masked_count += 1
         else:
             preserved_count += 1
             
-    print(f"\n--- Skin Mask Filtering ---")
     print(f"Total skin contours: {len(conts)}")
-    print(f"Masked (hands/fingers at boundary): {masked_count}")
-    print(f"Preserved (internal stone textures): {preserved_count}")
+    print(f"Masked (hands at boundary): {masked_count}")
+    print(f"Preserved (slab textures): {preserved_count}")
     
     valid_mask = cv2.bitwise_and(slab_mask, cv2.bitwise_not(filtered_skin_mask))
     print(f"valid_mask non-zero pixels: {np.sum(valid_mask > 0)}")

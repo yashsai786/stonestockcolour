@@ -6,8 +6,8 @@ def test_loads_profiles_from_file():
     repo = JsonColorProfileRepository()
     profiles = repo.load_profiles()
     
-    # We should have all 28 commercial colors loaded
-    assert len(profiles) == 28
+    # We should have all 34 commercial colors loaded
+    assert len(profiles) == 34
     
     # Check that a specific color was loaded correctly
     pure_white = repo.get_by_name("Pure White")

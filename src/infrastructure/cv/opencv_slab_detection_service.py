@@ -44,6 +44,16 @@ class OpenCVSlabDetectionService(SlabDetectionService):
         collect_candidates(thresh)
         collect_candidates(255 - thresh)
 
+        # Collect Canny Edge candidates to handle high-contrast veined slabs perfectly
+        try:
+            bilateral = cv2.bilateralFilter(gray, 9, 75, 75)
+            edges = cv2.Canny(bilateral, 30, 150)
+            dilation_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (7, 7))
+            dilated_edges = cv2.dilate(edges, dilation_kernel)
+            collect_candidates(dilated_edges)
+        except Exception:
+            pass
+
         best_contour = None
         best_score = -1.0
 

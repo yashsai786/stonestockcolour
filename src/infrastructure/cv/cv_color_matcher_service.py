@@ -97,18 +97,30 @@ class CVColorMatcherService(ColorMatcherService):
                 distances = self._calculate_euclidean(query_lab, cand_labs)
 
         # THE COLOR TEMPERATURE GUARDRAIL:
-        # If there is even a subtle tint of olive, sage, rose, or gold (chrominance C > 4.0),
-        # do NOT default to neutral greys. Penalize neutral profiles so the tinted color wins.
-        c_query = np.sqrt(lab_color.a**2 + lab_color.b**2)
-        if c_query > 4.0:
+        # A human eye instantly separates subtle tints from pure neutral greys.
+        # If there is even a subtle tint of green/olive (a < -0.6), pink/rose (a > 1.2),
+        # gold/yellow (b > 2.5), or blue (b < -2.5), do NOT default to neutral greys.
+        has_tint = False
+        if lab_color.a < -0.6:
+            has_tint = True
+        elif lab_color.a > 1.2:
+            has_tint = True
+        elif lab_color.b > 2.5:
+            has_tint = True
+        elif lab_color.b < -2.5:
+            has_tint = True
+
+        if has_tint:
             neutral_names = {
                 "pure white", "warm white", "off white", 
                 "light grey", "grey", "dark grey", "charcoal", "black"
             }
+            c_query = np.sqrt(lab_color.a**2 + lab_color.b**2)
+            penalty = 12.0 + (c_query * 2.0)
             for i, p in enumerate(profiles):
                 if p.name.lower() in neutral_names:
-                    # Apply a robust distance penalty scaled to the chrominance saturation
-                    distances[i] += 8.0 + (c_query * 1.5)
+                    # Apply a robust distance penalty so a tinted commercial category wins
+                    distances[i] += penalty
 
         # Get index of minimum distance
         min_idx = int(np.argmin(distances))

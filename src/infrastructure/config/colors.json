@@ -16,6 +16,11 @@
       "tolerance": 10.0
     },
     {
+      "name": "Warm Ivory",
+      "lab": [88.0, 1.0, 12.0],
+      "tolerance": 12.0
+    },
+    {
       "name": "Ivory",
       "lab": [88.0, 1.0, 10.0],
       "tolerance": 12.0
@@ -76,6 +81,11 @@
       "tolerance": 18.0
     },
     {
+      "name": "Blush Pink",
+      "lab": [72.0, 8.0, 4.0],
+      "tolerance": 15.0
+    },
+    {
       "name": "Pink",
       "lab": [70.0, 15.0, 6.0],
       "tolerance": 15.0
@@ -88,6 +98,11 @@
     {
       "name": "Terracotta",
       "lab": [48.0, 15.0, 18.0],
+      "tolerance": 20.0
+    },
+    {
+      "name": "Ochre Yellow",
+      "lab": [65.0, 4.0, 28.0],
       "tolerance": 20.0
     },
     {
@@ -114,6 +129,21 @@
       "name": "Green",
       "lab": [38.0, -15.0, 10.0],
       "tolerance": 25.0
+    },
+    {
+      "name": "Sage Green",
+      "lab": [58.0, -3.0, 2.0],
+      "tolerance": 15.0
+    },
+    {
+      "name": "Olive Green",
+      "lab": [45.0, -4.0, 8.0],
+      "tolerance": 15.0
+    },
+    {
+      "name": "Forest Green",
+      "lab": [26.0, -6.0, 1.0],
+      "tolerance": 15.0
     },
     {
       "name": "Emerald Green",
