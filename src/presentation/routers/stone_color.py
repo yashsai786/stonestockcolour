@@ -134,14 +134,126 @@ async def _process_bytes_to_response(
                 detail=f"Processing pipeline failed: {detail_msg}"
             )
 
+        from src.presentation.schemas.http import ColorDetail, ColorPalette
+        
+        primary_pct = analysis_result.primary_percentage
+        secondary_pct = analysis_result.secondary_percentage
+        accent_pct = analysis_result.accent_percentage
+        
+        primary_name = analysis_result.primary_color
+        secondary_name = analysis_result.secondary_color or "None"
+        accent_name = analysis_result.accent_color or "None"
+        
+        p_name_l = primary_name.lower()
+        s_name_l = secondary_name.lower()
+        a_name_l = accent_name.lower()
+        
+        # 1. Determine Stone Category Heuristics
+        if primary_pct >= 85.0:
+            stone_category = "Uniform slab"
+        elif any(x in p_name_l or x in s_name_l or x in a_name_l for x in ["multi color", "mixed neutral", "red", "burgundy", "terracotta", "gold", "green"]):
+            stone_category = "Breccia"
+        elif any(x in p_name_l for x in ["white", "cream", "ivory"]) and any(y in s_name_l or y in a_name_l for y in ["black", "charcoal", "dark grey", "dark gray"]):
+            stone_category = "Calacatta-type"
+        else:
+            stone_category = "Veined"
+            
+        # 2. visual_description luxury generator (2 sentences max)
+        if stone_category == "Uniform slab":
+            desc = f"A highly uniform and cohesive {primary_name} slab presenting a clean, contemporary canvas of minimal variation. Subtle hints of {secondary_name if secondary_pct > 0 else 'underlying shading'} add depth without disrupting the stone's sleek, sophisticated, and polished architectural simplicity."
+        elif stone_category == "Breccia":
+            desc = f"An exquisite Breccia slab showing a rich collage of {primary_name} and {secondary_name} mineral deposits. The intricate veins and contrasting pools of {accent_name if accent_pct > 0 else 'calcite'} create a vibrant, highly dynamic character that fits perfectly as a luxury focal feature."
+        elif stone_category == "Calacatta-type":
+            desc = f"A classic Calacatta-type slab featuring a luxurious {primary_name} base layered with sophisticated {secondary_name} tones. Striking, high-contrast {accent_name} veining runs across the surface, delivering an imposing, timeless elegance for upscale modern interiors."
+        else: # Veined
+            desc = f"A gracefully veined slab defined by a serene {primary_name} background decorated with flowing {secondary_name} mineral bands. Highlights of {accent_name if accent_pct > 0 else 'calcite'} add a delicate, subtle contrast that exudes refined taste and quiet luxury."
+            
+        # 3. search_tags generator (4-5 tags, omitting 'gray' unless truly dominant)
+        allow_gray = any(g in p_name_l for g in ["grey", "gray", "charcoal", "slate"])
+        
+        def clean_tag(name: str) -> str:
+            res = name
+            if not allow_gray:
+                res = res.replace("Grey", "").replace("grey", "").replace("Gray", "").replace("gray", "").replace("Charcoal", "").replace("charcoal", "")
+            return res.strip()
+            
+        c_primary = clean_tag(primary_name)
+        c_secondary = clean_tag(secondary_name)
+        c_accent = clean_tag(accent_name)
+        
+        tags = []
+        if stone_category == "Uniform slab":
+            tags = [
+                f"Uniform {c_primary} granite" if c_primary else "Uniform granite",
+                f"Minimalist {c_primary} stone" if c_primary else "Minimalist stone",
+                "Sleek architectural slab",
+                "Premium floor quartzite"
+            ]
+        elif stone_category == "Breccia":
+            tags = [
+                f"{c_primary} Breccia marble" if c_primary else "Breccia marble",
+                f"{c_secondary} stone slab" if c_secondary and c_secondary != "None" else "Brecciated stone",
+                "Luxury brecciated quartzite",
+                "Multi-color bookmatch marble",
+                "Premium feature wall slab"
+            ]
+        elif stone_category == "Calacatta-type":
+            tags = [
+                "Calacatta luxury marble",
+                f"{c_primary} marble slab" if c_primary else "Luxury marble slab",
+                f"{c_accent} veining quartzite" if c_accent and c_accent != "None" else "High-contrast veining quartzite",
+                "Premium bookmatch countertop"
+            ]
+        else: # Veined
+            tags = [
+                "Veined luxury quartzite",
+                f"{c_primary} veined marble" if c_primary else "Veined marble slab",
+                f"Contemporary {c_secondary} slab" if c_secondary and c_secondary != "None" else "Modern veined stone",
+                "Modern slab countertop"
+            ]
+            
+        final_tags = []
+        for t in tags:
+            cleaned = t.replace("  ", " ").strip()
+            if cleaned and cleaned not in final_tags and "none" not in cleaned.lower():
+                final_tags.append(cleaned)
+                
+        while len(final_tags) < 4:
+            final_tags.append("Premium bookmatch slab")
+            
+        final_tags = final_tags[:5]
+        
+        # 4. Construct Pydantic Palette models
+        primary_detail = ColorDetail(
+            color_name=primary_name,
+            percentage_estimate=f"{round(primary_pct)}%"
+        )
+        
+        secondary_detail = None
+        if analysis_result.secondary_color and secondary_pct > 0:
+            secondary_detail = ColorDetail(
+                color_name=analysis_result.secondary_color,
+                percentage_estimate=f"{round(secondary_pct)}%"
+            )
+            
+        accent_detail = None
+        if analysis_result.accent_color and accent_pct > 0:
+            accent_detail = ColorDetail(
+                color_name=analysis_result.accent_color,
+                percentage_estimate=f"{round(accent_pct)}%"
+            )
+            
+        palette = ColorPalette(
+            primary_background=primary_detail,
+            secondary_mineral_pools=secondary_detail,
+            high_contrast_veining=accent_detail
+        )
+        
         return StoneColorAnalysisResponse(
-            primary_color=analysis_result.primary_color,
-            secondary_color=analysis_result.secondary_color,
-            accent_color=analysis_result.accent_color,
-            primary_percentage=analysis_result.primary_percentage,
-            secondary_percentage=analysis_result.secondary_percentage,
-            accent_percentage=analysis_result.accent_percentage,
-            confidence=analysis_result.confidence
+            stone_category=stone_category,
+            visual_description=desc,
+            color_palette=palette,
+            search_tags=final_tags
         )
 
     except InvalidImageException as e:

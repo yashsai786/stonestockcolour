@@ -17,14 +17,18 @@ def test_analyze_endpoint_valid_image(synthetic_image_bytes):
     assert response.status_code == 200
     json_data = response.json()
     
-    # We should have a valid commercial stone color result
-    assert "primary_color" in json_data
-    assert "primary_percentage" in json_data
-    assert "confidence" in json_data
+    # We should have a valid commercial stone color result in our new geologist-grade structure
+    assert "stone_category" in json_data
+    assert "visual_description" in json_data
+    assert "color_palette" in json_data
+    assert "search_tags" in json_data
+    
+    primary_color = json_data["color_palette"]["primary_background"]["color_name"]
+    percentage = json_data["color_palette"]["primary_background"]["percentage_estimate"]
     
     # Clean slab was BGR (220, 220, 220) which is light grey, so it should map to Light Grey or Off White/Grey
-    assert json_data["primary_color"] in ["Light Grey", "Grey", "Off White"]
-    assert json_data["primary_percentage"] > 90.0
+    assert primary_color in ["Light Grey", "Grey", "Off White"]
+    assert percentage == "100%"
 
 
 def test_analyze_endpoint_invalid_format():
@@ -90,7 +94,8 @@ def test_analyze_url_endpoint_success(synthetic_image_bytes):
         )
         assert response.status_code == 200
         json_data = response.json()
-        assert json_data["primary_color"] in ["Light Grey", "Grey", "Off White"]
+        primary_color = json_data["color_palette"]["primary_background"]["color_name"]
+        assert primary_color in ["Light Grey", "Grey", "Off White"]
     finally:
         # Clear override
         app.dependency_overrides.clear()
