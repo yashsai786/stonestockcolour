@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: stone-color-detection-api
+    env: docker
+    plan: starter
+    region: oregon
+    branch: main
+    envVars:
+      - key: PORT
+        value: 8000
+      - key: PYTHONPATH
+        value: "/app"
+      - key: COLORS_CONFIG_PATH
+        value: "/app/src/infrastructure/config/colors.json"
+    autoDeploy: true
