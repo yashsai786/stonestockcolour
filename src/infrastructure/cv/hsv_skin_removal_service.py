@@ -6,15 +6,13 @@ from src.domain.exceptions.domain_exceptions import SkinRemovalException
 class HSVSkinRemovalService(SkinRemovalService):
     """
     HSV-based skin masking implementation of SkinRemovalService.
-    Vectorized NumPy operations only, no pixel loops.
+    Utilizes smart contour area filtering to protect orange/gold/brown
+    stone slabs from being mistakenly classified as human skin.
     """
     def remove_skin(self, image_arr: np.ndarray) -> np.ndarray:
         """
         Detects skin regions using HSV thresholds and returns a binary mask.
-        
-        Optimizations:
-        - Entirely vectorized using cv2.inRange and bitwise operators.
-        - Avoids expensive per-pixel loops for high-throughput capability.
+        Filters out massive skin-colored contours to preserve colorful slabs.
         """
         if image_arr is None or image_arr.size == 0:
             raise SkinRemovalException("Cannot perform skin removal on a null or empty image array.")
@@ -25,7 +23,6 @@ class HSVSkinRemovalService(SkinRemovalService):
         hsv = cv2.cvtColor(image_arr, cv2.COLOR_BGR2HSV)
 
         # 2. Define human skin color bounds in HSV space.
-        # Skin tones wrap around Hue 0/180.
         # Range 1: Lower hue region (reddish/orange/yellow skin tones)
         lower_skin1 = np.array([0, 25, 40], dtype=np.uint8)
         upper_skin1 = np.array([20, 255, 255], dtype=np.uint8)
@@ -48,4 +45,17 @@ class HSVSkinRemovalService(SkinRemovalService):
         # Dilate slightly to ensure we completely cover fingers/hands borders
         skin_mask = cv2.dilate(skin_mask, kernel, iterations=1)
 
-        return skin_mask
+        # 5. Contour area filtering: Keep only small contours (real hands/fingers/arms),
+        # filter out massive slab-sized matches to prevent gold/orange/brown slabs from being masked out!
+        conts, _ = cv2.findContours(skin_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        filtered_skin_mask = np.zeros_like(skin_mask)
+        total_area = w * h
+        
+        for c in conts:
+            area = cv2.contourArea(c)
+            # A human hand touching a slab typically occupies < 10% of the total image area.
+            # Large segments (> 10%) represent the golden/orange slab itself.
+            if area < (0.10 * total_area):
+                cv2.drawContours(filtered_skin_mask, [c], -1, 255, thickness=cv2.FILLED)
+
+        return filtered_skin_mask
