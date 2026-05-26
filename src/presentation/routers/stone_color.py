@@ -1,5 +1,6 @@
 import uuid
 import logging
+from typing import Optional
 from fastapi import APIRouter, UploadFile, File, Depends, HTTPException, status
 from src.application.commands.image_uploaded_command import ImageUploadedCommand
 from src.application.command_handlers.image_uploaded_command_handler import ImageUploadedCommandHandler
