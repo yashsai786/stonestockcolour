@@ -166,7 +166,7 @@ class HttpImageFetcher(ImageFetcherPort):
 
                 # 5. Stream the chunks
                 try:
-                    async for chunk in response.iter_bytes(chunk_size=16384):
+                    async for chunk in response.aiter_bytes(chunk_size=16384):
                         yield chunk
                 except httpx.TimeoutException:
                     raise ImageDownloadException("Timeout occurred while streaming image content.")
@@ -174,6 +174,7 @@ class HttpImageFetcher(ImageFetcherPort):
                     raise ImageDownloadException(f"Network error streaming image: {str(stream_err)}")
                 finally:
                     await response.aclose()
+
                 
                 # Stream completed, break outer redirect loop
                 break
