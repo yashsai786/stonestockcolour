@@ -22,8 +22,8 @@ def test_analyze_endpoint_valid_image(synthetic_image_bytes):
     assert "primary_percentage" in json_data
     assert "confidence" in json_data
     
-    # Clean slab was BGR (220, 220, 220) which is light grey, so it should map to Light Grey or Off White/Grey
-    assert json_data["primary_color"] in ["Light Grey", "Grey", "Off White"]
+    # Clean slab was BGR (220, 220, 220) which is light grey, so it should map to White or Grey master color
+    assert json_data["primary_color"] in ["White", "Grey"]
     assert json_data["primary_percentage"] > 90.0
 
 
@@ -90,7 +90,7 @@ def test_analyze_url_endpoint_success(synthetic_image_bytes):
         )
         assert response.status_code == 200
         json_data = response.json()
-        assert json_data["primary_color"] in ["Light Grey", "Grey", "Off White"]
+        assert json_data["primary_color"] in ["White", "Grey"]
     finally:
         # Clear override
         app.dependency_overrides.clear()

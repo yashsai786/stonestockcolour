@@ -134,18 +134,80 @@ async def _process_bytes_to_response(
                 detail=f"Processing pipeline failed: {detail_msg}"
             )
 
-        # Calculate a unified confidence score based on the color match reliability
-        # In a fully complete analysis, confidence represents matching precision
+        # 1. Define master color mapper function mapping to the 9 allowed UI filters
+        def map_to_master_color(color_name: Optional[str]) -> Optional[str]:
+            if not color_name or color_name.lower() == "none":
+                return None
+            c_lower = color_name.lower()
+            if "white" in c_lower:
+                return "White"
+            elif any(x in c_lower for x in ["grey", "gray", "charcoal", "slate"]):
+                return "Grey"
+            elif any(x in c_lower for x in ["beige", "ivory", "cream", "sand", "taupe"]):
+                return "Beige"
+            elif any(x in c_lower for x in ["brown", "coffee", "chocolate", "rust", "terracotta"]):
+                return "Brown"
+            elif "black" in c_lower:
+                return "Black"
+            elif any(x in c_lower for x in ["red", "burgundy"]):
+                return "Red"
+            elif any(x in c_lower for x in ["green", "sage", "olive", "emerald", "forest"]):
+                return "Green"
+            elif any(x in c_lower for x in ["pink", "rose", "blush"]):
+                return "Pink / Rose"
+            else:
+                return "Multi"
+
+        m_primary = map_to_master_color(analysis_result.primary_color) or "Multi"
+        m_secondary = map_to_master_color(analysis_result.secondary_color)
+        m_accent = map_to_master_color(analysis_result.accent_color)
+        
+        # 2. Determine geological category
+        primary_pct = analysis_result.primary_percentage
+        secondary_pct = analysis_result.secondary_percentage
+        accent_pct = analysis_result.accent_percentage
+        
+        p_name_l = m_primary.lower()
+        s_name_l = (m_secondary or "").lower()
+        a_name_l = (m_accent or "").lower()
+        
+        if primary_pct >= 85.0:
+            stone_category = "Uniform slab"
+        elif any(x in p_name_l or x in s_name_l or x in a_name_l for x in ["red", "brown", "green", "pink"]):
+            stone_category = "Breccia"
+        elif "white" in p_name_l and any(y in s_name_l or y in a_name_l for y in ["black", "grey"]):
+            stone_category = "Calacatta-type"
+        else:
+            stone_category = "Veined"
+            
+        # 3. Determine master pattern matching the 6 UI filters
+        if primary_pct >= 85.0:
+            pattern = "Uniform"
+        elif stone_category == "Breccia":
+            if accent_pct > 0 and accent_pct <= 12.0:
+                pattern = "Webbed"
+            else:
+                pattern = "Breccia"
+        elif stone_category == "Calacatta-type":
+            pattern = "Bold Veined"
+        else: # Veined
+            if accent_pct > 0 and accent_pct <= 8.0:
+                pattern = "Linear"
+            else:
+                pattern = "Cloudy"
+
         confidence = float(analysis_result.confidence)
 
         return StoneColorAnalysisResponse(
-            primary_color=analysis_result.primary_color,
-            secondary_color=analysis_result.secondary_color,
-            accent_color=analysis_result.accent_color,
-            primary_percentage=analysis_result.primary_percentage,
-            secondary_percentage=analysis_result.secondary_percentage,
-            accent_percentage=analysis_result.accent_percentage,
-            confidence=confidence
+            primary_color=m_primary,
+            secondary_color=m_secondary,
+            accent_color=m_accent,
+            primary_percentage=primary_pct,
+            secondary_percentage=secondary_pct,
+            accent_percentage=accent_pct,
+            confidence=confidence,
+            pattern=pattern,
+            stone_category=stone_category
         )
 
     except InvalidImageException as e:
